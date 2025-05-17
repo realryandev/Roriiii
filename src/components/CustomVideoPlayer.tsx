@@ -31,7 +31,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  let controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Changed to const
 
   const handlePlayPause = useCallback(() => {
     if (videoRef.current) {
@@ -67,13 +67,13 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   };
 
 
-  const handleTimeUpdate = () => {
+  const handleTimeUpdate = useCallback(() => { // Wrapped in useCallback
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
     }
-  };
+  }, []); // No dependencies needed as it only uses videoRef.current and setCurrentTime
 
-  const handleLoadedMetadata = () => {
+  const handleLoadedMetadata = useCallback(() => { // Wrapped in useCallback
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
       if (autoPlay) {
@@ -84,9 +84,9 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         videoRef.current.muted = true;
       }
     }
-  };
+  }, [autoPlay, initialMuted]); // Added autoPlay and initialMuted as dependencies
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => { // Wrapped in useCallback
     if (progressRef.current && videoRef.current) {
       const rect = progressRef.current.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -95,7 +95,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
       videoRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
-  };
+  }, [duration]); // Added duration as dependency
 
   const formatTime = (timeInSeconds: number): string => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -103,8 +103,8 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const toggleFullScreen = () => {
-    const playerElement = videoRef.current?.parentElement?.parentElement; // Adjust if your structure is different
+  const toggleFullScreen = useCallback(() => { // Wrapped in useCallback
+    const playerElement = videoRef.current?.parentElement?.parentElement;
     if (!playerElement) return;
 
     if (!document.fullscreenElement) {
@@ -116,7 +116,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         document.exitFullscreen();
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -134,7 +134,6 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         }
       });
 
-      // Set initial muted state
       video.muted = initialMuted;
 
       return () => {
@@ -143,7 +142,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         video.removeEventListener('ended', () => setIsPlaying(false));
         video.removeEventListener('timeupdate', handleTimeUpdate);
         video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        video.removeEventListener('volumechange', () => {
+        video.removeEventListener('volumechange', () => { // Re-add listener for cleanup
             if(videoRef.current) {
                 setIsMuted(videoRef.current.muted);
                 setVolume(videoRef.current.muted ? 0 : videoRef.current.volume);
@@ -151,7 +150,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
           });
       };
     }
-  }, [initialMuted]);
+  }, [initialMuted, handleTimeUpdate, handleLoadedMetadata]); // Added handleTimeUpdate, handleLoadedMetadata
 
   useEffect(() => {
     const checkFullScreen = () => {
@@ -161,14 +160,13 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     return () => document.removeEventListener('fullscreenchange', checkFullScreen);
   }, []);
 
-
-  const hideControls = () => {
-    if (isPlaying && !isFullScreen) { // Only hide if playing and not in persistent controls mode like fullscreen
+  const hideControls = useCallback(() => { // Wrapped in useCallback
+    if (isPlaying && !isFullScreen) {
         setShowControls(false);
     }
-  };
+  }, [isPlaying, isFullScreen]); // Added isPlaying and isFullScreen as dependencies
 
-  const showAndAutoHideControls = () => {
+  const showAndAutoHideControls = useCallback(() => { // Wrapped in useCallback
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -176,18 +174,17 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 3000); // Hide controls after 3 seconds of inactivity
+      }, 3000);
     }
-  };
+  }, [isPlaying]); // Added isPlaying as dependency
 
   useEffect(() => {
-    const playerElement = videoRef.current?.parentElement; // The container for video and controls
+    const playerElement = videoRef.current?.parentElement;
     if (playerElement) {
         playerElement.addEventListener('mousemove', showAndAutoHideControls);
-        playerElement.addEventListener('mouseleave', hideControls); // Hide when mouse leaves player
+        playerElement.addEventListener('mouseleave', hideControls);
     }
 
-    // Clear timeout on unmount or when isPlaying changes
     return () => {
         if (playerElement) {
             playerElement.removeEventListener('mousemove', showAndAutoHideControls);
@@ -197,9 +194,8 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
             clearTimeout(controlsTimeoutRef.current);
         }
     };
-  }, [isPlaying, showAndAutoHideControls]); // Rerun if isPlaying changes to manage timeout correctly
+  }, [isPlaying, showAndAutoHideControls, hideControls]); // Added hideControls
 
-  // Persistently show controls when paused or when explicitly set (e.g. on first load or mouse enter)
   useEffect(() => {
     if (!isPlaying) {
       setShowControls(true);
@@ -209,17 +205,16 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     }
   }, [isPlaying]);
 
-
   return (
     <div
       className={`relative group ${className} bg-black`}
       style={{ width: `${width}px`, height: `${height}px` }}
-      onMouseEnter={showAndAutoHideControls} // Show controls when mouse enters the player area
-      onMouseLeave={() => { // Hide controls when mouse leaves if video is playing
+      onMouseEnter={showAndAutoHideControls}
+      onMouseLeave={() => {
         if (isPlaying && controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
         if (isPlaying) setShowControls(false);
       }}
-      onMouseMove={showAndAutoHideControls} // Keep controls visible while mouse is moving over player
+      onMouseMove={showAndAutoHideControls}
     >
       <video
         ref={videoRef}
@@ -230,7 +225,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         onClick={handlePlayPause}
         onDoubleClick={toggleFullScreen}
         loop={loop}
-        playsInline // Important for iOS
+        playsInline
         preload="metadata"
       />
 
@@ -252,7 +247,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
           <div
             className="absolute top-1/2 left-0 h-3 w-3 bg-white rounded-full -translate-y-1/2 -translate-x-1/2 shadow"
             style={{ left: `${(currentTime / duration) * 100}%`, display: duration > 0 ? 'block' : 'none' }}
-           />
+            />
         </div>
 
         <div className="flex items-center justify-between">
@@ -283,7 +278,6 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
 
           {/* Right Controls */}
           <div className="flex items-center space-x-3">
-            {/* Add other controls here like quality settings if needed */}
             <button onClick={toggleFullScreen} className="focus:outline-none">
               {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
             </button>
