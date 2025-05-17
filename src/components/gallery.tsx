@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import CustomVideoPlayer from "../components/CustomVideoPlayer"; // Adjust path if needed
+import CustomVideoPlayer from "./CustomVideoPlayer"; // Adjust path if needed
 
 export default function Gallery() {
   const images = [
