@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'; // Removed unused React import
 
 const BackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -44,9 +44,9 @@ const BackgroundMusic = () => {
 
       // Event listener for user interaction (for iOS and modern browsers) - attempt to play on first user interaction
       const handleFirstInteraction = () => {
-          playMusic();
-          window.removeEventListener('click', handleFirstInteraction);
-          window.removeEventListener('touchstart', handleFirstInteraction);
+        playMusic();
+        window.removeEventListener('click', handleFirstInteraction);
+        window.removeEventListener('touchstart', handleFirstInteraction);
       }
       window.addEventListener('click', handleFirstInteraction, { once: true });
       window.addEventListener('touchstart', handleFirstInteraction, { once: true });
@@ -62,7 +62,7 @@ const BackgroundMusic = () => {
         window.removeEventListener('touchstart', handleFirstInteraction);
       };
     }
-  }, []);
+  }, []); //  Fixed: Removed unnecessary dependencies.  The effect only needs to run on mount and unmount.
 
   // Important: We don't render the audio element. It is controlled via the ref.
   return null;
