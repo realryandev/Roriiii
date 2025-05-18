@@ -10,10 +10,10 @@ export default function Gallery() {
   ];
 
   const videos = [
-    { id: 4, src: "/rori5.mp4", width: 300, height: 400, title: "Rori Video 1" },
-    { id: 5, src: "/rori6.mp4", width: 300, height: 400, title: "Rori Video 2" },
-    { id: 6, src: "/rori7.mp4", width: 300, height: 400, title: "Rori Video 3" },
-    { id: 7, src: "/rori8.mp4", width: 300, height: 400, title: "Rori Video 4" },
+    { id: 4, src: "/rori5.mp4", width: 370, height: 400, title: "Rori Video 1" },
+    { id: 5, src: "/rori6.mp4", width: 370, height: 400, title: "Rori Video 2" },
+    { id: 6, src: "/rori7.mp4", width: 370, height: 400, title: "Rori Video 3" },
+    { id: 7, src: "/rori8.mp4", width: 370, height: 400, title: "Rori Video 4" },
   ];
 
   return (
