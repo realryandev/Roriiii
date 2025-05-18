@@ -1,71 +1,77 @@
 "use client"
 
-import { useEffect, useRef } from 'react'; // Removed unused React import
+import React, { useEffect, useRef } from 'react';
 
 const BackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    // Ensure the audio playback only happens on the client-side
-    if (typeof window !== 'undefined') {
-      // IMPORTANT: Next.js serves files in the 'public' directory at the root.
-      // You should reference the file path relative to the 'public' directory.
-      audioRef.current = new Audio('/Frank Ocean - White Ferrari.mp3');
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.6;
+    // Ensure the code runs only on the client-side.  This is crucial for Next.js
+    if (typeof window === 'undefined') return;
 
-      const startTime = 184;
-      const endTime = 248;
+    const startTime = 184;
+    const endTime = 248;
+    const audioFilePath = '/Frank Ocean - White Ferrari.mp3'; // Path relative to /public
 
-      const playMusic = () => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = startTime;
-
-          const playPromise = audioRef.current.play();
-
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              // Autoplay started!
-              audioRef.current?.addEventListener('timeupdate', () => {
-                if (audioRef.current && audioRef.current.currentTime >= endTime) {
-                  audioRef.current.currentTime = startTime; // Loop back to start
-                }
-              });
-            }).catch(error => {
-              // Autoplay was prevented. Show a play button or handle it.
-              console.warn("Autoplay was prevented", error);
-            });
-          }
-        }
-      };
-
-      // Play the music when the component mounts
-      playMusic();
-
-      // Event listener for user interaction (for iOS and modern browsers) - attempt to play on first user interaction
-      const handleFirstInteraction = () => {
-        playMusic();
-        window.removeEventListener('click', handleFirstInteraction);
-        window.removeEventListener('touchstart', handleFirstInteraction);
+    // Function to initialize and play audio
+    const setupAndPlayAudio = () => {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(audioFilePath);
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.5;
+        audioRef.current.currentTime = startTime; // Set start time
       }
-      window.addEventListener('click', handleFirstInteraction, { once: true });
-      window.addEventListener('touchstart', handleFirstInteraction, { once: true });
 
+      const playPromise = audioRef.current.play();
 
-      // Cleanup function to pause the music when the component unmounts
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
-        window.removeEventListener('click', handleFirstInteraction);
-        window.removeEventListener('touchstart', handleFirstInteraction);
-      };
-    }
-  }, []); //  Fixed: Removed unnecessary dependencies.  The effect only needs to run on mount and unmount.
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // Autoplay started successfully.
+            audioRef.current?.addEventListener('timeupdate', () => {
+              if (audioRef.current && audioRef.current.currentTime >= endTime) {
+                audioRef.current.currentTime = startTime; // Loop
+              }
+            });
+          })
+          .catch(error => {
+            // Autoplay was prevented.  Important for mobile.
+            console.warn("Autoplay prevented:", error);
+            // *DON'T* try to play again here without user interaction.
+            //  Instead, wait for a user event (like a click).
+          });
+      }
+    };
 
-  // Important: We don't render the audio element. It is controlled via the ref.
-  return null;
+    // Attempt to play on initial load (for browsers that allow it)
+    setupAndPlayAudio();
+
+    // --- User Interaction Handling (for iOS and other browsers) ---
+    const handleFirstInteraction = () => {
+      setupAndPlayAudio(); // *RETRY* playing on user interaction
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction); // Also handle keypress
+    };
+
+    // Add event listeners for *any* user interaction.  Keydown is important for accessibility.
+    window.addEventListener('click', handleFirstInteraction, { once: true });
+    window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    window.addEventListener('keydown', handleFirstInteraction, { once: true });
+
+    // --- Cleanup ---
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []); // Empty dependency array:  Run only once on mount
+
+  return null; //  Don't render anything.  Audio is controlled via the ref.
 };
 
 export default BackgroundMusic;
