@@ -66,8 +66,12 @@ const Affirmations = () => {
         if (savedLikes) {
             try {
                 setLikedAffirmations(JSON.parse(savedLikes));
-            } catch (e) {
-                setError("Failed to load your liked affirmations.");
+            } catch (err) {
+                if (err instanceof Error) {
+                    setError("Failed to load your liked affirmations: " + err.message);
+                } else {
+                    setError("Failed to load your liked affirmations.");
+                }
             }
         }
     }, []); // Empty dependency array means it runs once after initial render
@@ -106,7 +110,7 @@ const Affirmations = () => {
                     Daily Affirmation For My Beautiful Friend <Smile className="inline h-6 w-6 text-yellow-400 ml-2" />
                 </h1>
 
-                <div className="bg-white/80 backdrop-blur-md border border-pink-200/50 shadow-lg rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-pink-300/50 relative overflow-hidden">
+                <div className="border border-pink-200/50 shadow-lg rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-pink-300/50 relative overflow-hidden">
                     <div className="p-6 text-center">
                         <div className="relative min-h-[96px] flex items-center justify-center">
                             <motion.div
@@ -164,7 +168,14 @@ const Affirmations = () => {
                             </button>
 
                             <button
-                                onClick={handleLikeAffirmation}
+                                onClick={() => {
+                                    setLoading(true);
+                                    setTimeout(() => {
+                                        const newAffirmation = getRandomAffirmation(defaultAffirmations);
+                                        setCurrentAffirmation(newAffirmation);
+                                        setLoading(false);
+                                    }, 500);
+                                }}
                                 disabled={loading}
                                 className={cn(
                                     "px-6 py-3 rounded-full transition-colors duration-300 flex items-center",
