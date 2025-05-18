@@ -1,0 +1,255 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {  Heart, RefreshCw, CheckCircle, AlertTriangle, Sparkles, Smile } from 'lucide-react';
+
+interface Affirmation {
+    id: string;
+    text: string;
+}
+
+const defaultAffirmations: Affirmation[] = [
+    { id: '1', text: "I am strong and capable! 💪" },
+    { id: '2', text: "I believe in myself. ✨" },
+    { id: '3', text: "I am worthy of love and happiness. ❤️" },
+    { id: '4', text: "I embrace my unique qualities. 🌟" },
+    { id: '5', text: "I am grateful for all that I have. 🙏" },
+    { id: '6', text: "I am confident in my decisions. 😎" },
+    { id: '7', text: "I forgive myself and move forward. 💖" },
+    { id: '8', text: "I am surrounded by positivity. ☀️" },
+    { id: '9', text: "I am in control of my own destiny. 🚀" },
+    { id: '10', text: "I radiate beauty and grace. 🌸" },
+    { id: '11', text: "I am a force for good in the world. 💫" },
+    { id: '12', text: "I trust my intuition. 🧘‍♀️" },
+    { id: '13', text: "I am open to receiving abundance. 💰" },
+    { id: '14', text: "I am constantly growing and evolving. 🌱" },
+    { id: '15', text: "I celebrate my achievements. 🎉" },
+    { id: '16', text: "I am filled with energy and vitality. ⚡" },
+    { id: '17', text: "I attract positive people and experiences. 🌈" },
+    { id: '18', text: "I am creating a life I love. 🎨" },
+    { id: '19', text: "I am healthy and vibrant. 🍏" },
+    { id: '20', text: "I am successful in all that I do. 🏆" },
+    { id: '21', text: "I am loved and cherished. 🥰" },
+    { id: '22', text: "I am at peace with myself. 🕊️" },
+    { id: '23', text: "I am courageous and fearless. 🦁" },
+    { id: '24', text: "I am full of joy and laughter. 😄" },
+    { id: '25', text: "I am making a difference. 🌍" },
+];
+
+const getRandomAffirmation = (affirmations: Affirmation[]): Affirmation => {
+    if (affirmations.length === 0) {
+        return { id: 'empty', text: "No affirmations available. 😔" };
+    }
+    const randomIndex = Math.floor(affirmations.length * Math.random());
+    return affirmations[randomIndex];
+};
+
+// A basic implementation of cn.  Replace with a more robust library if needed.
+const cn = (...classes: (string | boolean | undefined | null)[]): string => {
+    return classes.filter(Boolean).join(' ');
+};
+
+const Affirmations = () => {
+    const [currentAffirmation, setCurrentAffirmation] = useState<Affirmation>(() => {
+        if (typeof window === 'undefined') {
+            // During server-side rendering, pick the first affirmation.
+            return defaultAffirmations[0] || { id: 'empty', text: "No affirmations available. 😔" };
+        }
+        // On the client, get a random one.
+        return getRandomAffirmation(defaultAffirmations)
+    });
+
+    const [likedAffirmations, setLikedAffirmations] = useState<string[]>([]);
+    const [showLikeMessage, setShowLikeMessage] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Load liked affirmations from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedLikes = localStorage.getItem('likedAffirmations');
+            if (savedLikes) {
+                try {
+                    setLikedAffirmations(JSON.parse(savedLikes));
+                } catch (e) {
+                    console.error("Error parsing saved likes:", e);
+                    setError("Failed to load your liked affirmations.");
+                }
+            }
+        }
+    }, []);
+
+    // Save liked affirmations to localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('likedAffirmations', JSON.stringify(likedAffirmations));
+        }
+    }, [likedAffirmations]);
+
+    // Change affirmation every 5 seconds
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setLoading(true);
+            setTimeout(() => {
+                const newAffirmation = getRandomAffirmation(defaultAffirmations);
+                setCurrentAffirmation(newAffirmation);
+                setLoading(false);
+            }, 500);
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const handleLikeAffirmation = () => {
+        if (!likedAffirmations.includes(currentAffirmation.id)) {
+            setLikedAffirmations([...likedAffirmations, currentAffirmation.id]);
+            setShowLikeMessage(true);
+            setTimeout(() => {
+                setShowLikeMessage(false);
+            }, 3000);
+        }
+    };
+
+    const isLiked = likedAffirmations.includes(currentAffirmation.id);
+
+    return (
+        <div
+            className="flex flex-col items-center justify-center min-h-screen p-4"
+        >
+            <div className="w-full max-w-md space-y-6">
+                <h1
+                    className="text-3xl sm:text-4xl font-bold text-center text-gray-800 tracking-tight"
+                >
+                    Daily Affirmation For My Beautiful Friend <Smile className="inline-block h-6 w-6 ml-2 text-yellow-400" />
+                </h1>
+
+                <div
+                    className={cn(
+                        "bg-white/80 backdrop-blur-md border border-pink-200/50 shadow-lg rounded-xl",
+                        "transition-all duration-300",
+                        "hover:shadow-xl hover:scale-[1.01] hover:border-pink-300/50",
+                        "relative overflow-hidden"
+                    )}
+                >
+                    <div className="p-6 text-center">
+                        <AnimatePresence>
+                            {loading ? (
+                                <motion.div
+                                    key="loading"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-gray-600 flex items-center justify-center h-24"
+                                >
+                                    <RefreshCw className="animate-spin h-6 w-6 text-pink-500" />
+                                </motion.div>
+                            ) : error ? (
+                                <motion.div
+                                    key="error"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-red-500 flex items-center justify-center h-24"
+                                >
+                                    <AlertTriangle className="mr-2 h-6 w-6" />
+                                    {error}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key={currentAffirmation.id}
+                                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                    transition={{
+                                        duration: 0.5,
+                                        type: "spring",
+                                        stiffness: 120,
+                                        damping: 17,
+                                    }}
+                                    className="text-gray-700 text-lg sm:text-xl font-medium min-h-[96px] flex items-center justify-center"
+                                >
+                                    {currentAffirmation.text}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <AnimatePresence>
+                            {showLikeMessage && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10, scale: 0.8 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -10, scale: 0.8 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-500/90 text-white px-3 py-1 rounded-full text-sm shadow-md z-10 flex items-center"
+                                >
+                                    <CheckCircle className="mr-1 h-4 w-4" />
+                                    Affirmation added to your favorites!
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="mt-6 flex items-center justify-center gap-4">
+                            <button
+                                onClick={handleLikeAffirmation}
+                                disabled={isLiked}
+                                className={cn(
+                                    "px-4 py-2 rounded-full transition-colors duration-300 border",
+                                    isLiked
+                                        ? "bg-pink-500/20 text-pink-400 border-pink-300/50"
+                                        : "bg-white/50 text-pink-500 hover:bg-pink-500/20 border-pink-300/50 hover:border-pink-400/50",
+                                    "transition-transform hover:scale-105",
+                                    isLiked && "animate-pulse"
+                                )}
+                                aria-label="Like Affirmation"
+                            >
+                                <Heart
+                                    className={cn(
+                                        "h-5 w-5",
+                                        isLiked ? "fill-pink-400" : "fill-transparent"
+                                    )}
+                                />
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    handleLikeAffirmation();
+                                }}
+                                disabled={loading}
+                                className={cn(
+                                    "px-6 py-3 rounded-full transition-colors duration-300 flex items-center",
+                                    "bg-gradient-to-r from-pink-500 to-purple-500 text-white",
+                                    "hover:from-pink-600 hover:to-purple-600",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                                    "shadow-lg hover:shadow-xl hover:scale-105",
+                                    "transition-transform"
+                                )}
+                                aria-label="Get New Affirmation"
+                            >
+                                {loading ? (
+                                    <>
+                                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        New Affirmation
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="text-center text-gray-600 text-sm">
+                    <p>
+                        Made with <Heart className="inline-block h-4 w-4 text-pink-500" /> for a special friend.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Affirmations;
