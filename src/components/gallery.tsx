@@ -48,7 +48,7 @@ export default function Gallery() {
           {videos.map((video) => (
             <div
               key={video.id}
-              className="break-inside-avoid rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-black" // bg-black for video player
+              className="break-inside-avoid rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300" // bg-black for video player
             >
               {/* The CustomVideoPlayer itself will manage its aspect ratio via width/height props */}
               <CustomVideoPlayer
